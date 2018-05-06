@@ -3,10 +3,6 @@
 
 #include <LiquidCrystal.h>
 
-/**
- * Déclaration of screen class
- */
-
 // screen size
 
 #define WIDTH_SCREEN 8
@@ -20,17 +16,7 @@
 #define D6 8
 #define D7 9
 
-/**
- * Screen classe inherits from LiquiCrystal
- * by this way, we can add some specific methods
- */
-class Screen : public LiquidCrystal{
-  public:
-    /**
-     * Constructors 
-     */
-    Screen();
-    Screen(int8_t rs, int8_t en, int8_t d4, int8_t d5, int8_t d6, int8_t d7);
-};
+// define lcd
+LiquidCrystal lcd(RS, EN, D4, D5, D6, D7);
 
 #endif
