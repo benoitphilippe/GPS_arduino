@@ -7,6 +7,7 @@
 
 #define WIDTH_SCREEN 8
 #define HEIGHT_SCREEN 2
+#define BAUD_RATE 4800
 
 // defines for screen interface
 #define RS 4
