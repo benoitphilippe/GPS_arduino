@@ -9,10 +9,9 @@ void setup()
 {
   // define baud rate for communication
   Serial.begin(BAUD_RATE);
-  
+  // initiate lcd screen
   lcd.begin(WIDTH_SCREEN, HEIGHT_SCREEN);
   lcd.print("Bonjour");
- 
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
