@@ -1,6 +1,10 @@
 #include <SPI.h>
 #include <SD.h>
 #include <LiquidCrystal.h>
+#include <SoftwareSerial.h>
+#include "TinyGPS.h"
+
+#define MAX_BATTERY 774.0
 
 Sd2Card card;
 SdVolume volume;
@@ -8,27 +12,32 @@ SdFile root;
 
 LiquidCrystal lcd(4,5,6,7,8,9);
 
+
+// Pour le GPS
+TinyGPS gps;
+SoftwareSerial ss(3, 2);
+
 // We are using a board which uses the pin 10/SS for the SD card (CS/SS pin)
 const int chipSelect = 10;
 
 void setup() {
+  unsigned long startTime;
+  unsigned long currentTime;
   Serial.begin(9600);
   lcd.begin(8,2);
+  ss.begin(4800);
   while(!Serial) {
     ;
   }
-  Serial.println("\nInitializing SD card...");
+  lcd.print("Battery");
+  lcd.setCursor(0,1);
+  lcd.print(((float)analogRead(A0) * 100.0)/MAX_BATTERY);
+  lcd.print('%');
+  startTime = millis();
   
   if (!card.init(SPI_HALF_SPEED, chipSelect)) {
-    Serial.println("initialization failed, things to check:");
-    Serial.println("* is a card inserted ?");
-    Serial.println("* is your wiring correct ?");
-    Serial.println("* did you change the chipSelect pin to match your shield or module ?");
-    Serial.print("isnotok");
+    Serial.println("SD isnotok");
     while (1);
-  } else {
-    Serial.println("Wiring is correct and a card is present.");
-    Serial.println("is ok");
   }
 
   // print the type of card
@@ -51,7 +60,7 @@ void setup() {
     Serial.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
     while (1);
   }
-
+/*
   Serial.print("Clusters:          ");
   Serial.println(volume.clusterCount());
   Serial.print("Blocks x Cluster:  ");
@@ -63,6 +72,7 @@ void setup() {
 
   // print the type and size of the first FAT-type volume
   uint32_t volumesize;
+
   Serial.print("Volume type is:    FAT");
   Serial.println(volume.fatType(), DEC);
 
@@ -71,18 +81,64 @@ void setup() {
   volumesize /= 2;                           // SD card blocks are always 512 bytes (2 blocks are 1KB)
   Serial.print("Volume size (Kb):  ");
   Serial.println(volumesize);
-  Serial.print("Volume size (Mb):  ");
+  Serial.print("Volume size (Mb):  "); 
   volumesize /= 1024;
   Serial.println(volumesize);
   Serial.print("Volume size (Gb):  ");
   Serial.println((float)volumesize / 1024.0);
 
-  Serial.println("\nFiles found on the card (name, date and size in bytes): ");
+  Serial.println("\nFiles found on the card (name, date and size in bytes): ");*/
   root.openRoot(volume);
 
   // list all files in the card with date and size
   root.ls(LS_R | LS_DATE | LS_SIZE);
+
+  // test pour savoir si on a dépassé les 3 secondes de chargement
+  currentTime = millis();
+  if (currentTime - startTime < 3000){
+    delay(3000 - (currentTime - startTime));
+  }
 }
 
 void loop(void) {
+  bool newData = false;
+  unsigned long chars;
+  unsigned short sentences, failed;
+
+  // For one second we parse GPS data and report some key values
+  for (unsigned long start = millis(); millis() - start < 1000;)
+  {
+    while (ss.available())
+    {
+      char c = ss.read();
+      Serial.write(c); // uncomment this line if you want to see the GPS data flowing
+      if (gps.encode(c)) // Did a new valid sentence come in?
+        newData = true;
+    }
+  }
+
+  if (newData)
+  {
+    float flat, flon;
+    unsigned long age;
+    gps.f_get_position(&flat, &flon, &age);
+    Serial.print("LAT=");
+    Serial.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6);
+    Serial.print(" LON=");
+    Serial.print(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6);
+    Serial.print(" SAT=");
+    Serial.print(gps.satellites() == TinyGPS::GPS_INVALID_SATELLITES ? 0 : gps.satellites());
+    Serial.print(" PREC=");
+    Serial.print(gps.hdop() == TinyGPS::GPS_INVALID_HDOP ? 0 : gps.hdop());
+  }
+  
+  gps.stats(&chars, &sentences, &failed);
+  Serial.print(" CHARS=");
+  Serial.print(chars);
+  Serial.print(" SENTENCES=");
+  Serial.print(sentences);
+  Serial.print(" CSUM ERR=");
+  Serial.println(failed);
+  if (chars == 0)
+    Serial.println("** No characters received from GPS: check wiring **");
 }
