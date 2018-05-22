@@ -1,15 +1,8 @@
-#include <SPI.h>
-#include <SD.h>
 #include <LiquidCrystal.h>
 
-Sd2Card card;
-SdVolume volume;
-SdFile root;
+#define MAX_BATTERY 774.0
 
 LiquidCrystal lcd(4,5,6,7,8,9);
-
-// We are using a board which uses the pin 10/SS for the SD card (CS/SS pin)
-const int chipSelect = 10;
 
 void setup() {
   Serial.begin(9600);
@@ -17,21 +10,16 @@ void setup() {
   while(!Serial) {
     ;
   }
-  Serial.println("\nInitializing SD card...");
-  if (!card.init(SPI_HALF_SPEED, chipSelect)) {
-    Serial.println("initialization failed, things to check:");
-    Serial.println("* is a card inserted ?");
-    Serial.println("* is your wiring correct ?");
-    Serial.println("* did you change the chipSelect pin to match your shield or module ?");
-    Serial.print("isnotok");
-    while (1);
-  } else {
-    Serial.println("Wiring is correct and a card is present.");
-    Serial.println("is ok");
-  }
+  lcd.print("Battery");
+  lcd.setCursor(0,1);
+  lcd.print((analogRead(A0) * 100.0)/MAX_BATTERY);
+  lcd.print('%');
+  Serial.println("Système en cours d'initialisation");
+  Serial.print("Battery lvl : ");
+  Serial.print((analogRead(A0) * 100.0)/MAX_BATTERY);
+  Serial.println('%');
+  delay(2000);
 }
 
 void loop() {
-  lcd.print("is ok");
-
 }
