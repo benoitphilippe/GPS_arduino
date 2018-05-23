@@ -46,7 +46,7 @@ void setup() {
   }
 
   // print the type of card
-  Serial.println();
+  /*Serial.println();
   Serial.print("Card type:         ");
   switch (card.type()) {
     case SD_CARD_TYPE_SD1:
@@ -60,7 +60,7 @@ void setup() {
       break;
     default:
       Serial.println("Unknown");
-  }  // Now we will try to open the 'volume'/'partition' - it should be FAT16 or FAT32
+  }*/  // Now we will try to open the 'volume'/'partition' - it should be FAT16 or FAT32
   if (!volume.init(card)) {
     Serial.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
     while (1);
@@ -96,7 +96,7 @@ void setup() {
   root.openRoot(volume);
 
   // list all files in the card with date and size
-  root.ls(LS_R | LS_DATE | LS_SIZE);
+  //root.ls(LS_R | LS_DATE | LS_SIZE);
 
   // test pour savoir si on a dépassé les 3 secondes de chargement
   currentTime = millis();
