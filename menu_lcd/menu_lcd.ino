@@ -1,9 +1,10 @@
 #include "Bounce2.h"
 #include <LiquidCrystal.h>
 
+//Valeur batterie maximum
 #define MAX_BATTERY 774.0
 
-//décodeur boutons
+//Boutons
 #define BP0 16 
 #define BP1 15
 #define BPEN 17
@@ -11,6 +12,9 @@
 Bounce debouncer1 = Bounce();
 Bounce debouncer2 = Bounce();
 Bounce debouncer3 = Bounce();
+
+int action = 0;
+int choix = 0;
 
 LiquidCrystal lcd(4,5,6,7,8,9);
 
@@ -42,6 +46,7 @@ void setup() {
 
 void loop() {
 
-  clavier();
+  input = clavier();
+  action = choix();
 
 }
