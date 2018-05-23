@@ -28,12 +28,12 @@ unsigned long age;
 void setup() {
   unsigned long startTime;
   unsigned long currentTime;
-  Serial.begin(9600);
+  //Serial.begin(9600);
   lcd.begin(8,2);
   ss.begin(4800);
-  while(!Serial) {
+  /*while(!Serial) {
     ;
-  }
+  }*/
   lcd.print("Battery");
   lcd.setCursor(0,1);
   lcd.print(((float)analogRead(A0) * 100.0)/MAX_BATTERY);
@@ -41,7 +41,7 @@ void setup() {
   startTime = millis();
   
   if (!card.init(SPI_HALF_SPEED, SDPORT)) {
-    Serial.println("SD isnotok");
+    //Serial.println("SD isnotok");
     while (1);
   }
 
@@ -62,7 +62,7 @@ void setup() {
       Serial.println("Unknown");
   }*/  // Now we will try to open the 'volume'/'partition' - it should be FAT16 or FAT32
   if (!volume.init(card)) {
-    Serial.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
+    //Serial.println("Could not find FAT16/FAT32 partition.\nMake sure you've formatted the card");
     while (1);
   }
 /*
@@ -108,13 +108,17 @@ void setup() {
 void loop(void) {
   if (getGPSData())
     { // when new datas are available
-        Serial.print("LAT=");
+        lcd.setCursor(0,0);
+        lcd.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6);
+        lcd.setCursor(0,1);
+        lcd.print(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6);
+        /*Serial.print("LAT=");
         Serial.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6);
         Serial.print(" LON=");
         Serial.print(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6);
         Serial.print(" SAT=");
         Serial.print(gps.satellites() == TinyGPS::GPS_INVALID_SATELLITES ? 0 : gps.satellites());
         Serial.print(" PREC=");
-        Serial.println(gps.hdop() == TinyGPS::GPS_INVALID_HDOP ? 0 : gps.hdop());
+        Serial.println(gps.hdop() == TinyGPS::GPS_INVALID_HDOP ? 0 : gps.hdop());*/
     }
 }
