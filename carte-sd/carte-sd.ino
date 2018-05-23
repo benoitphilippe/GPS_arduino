@@ -4,21 +4,21 @@
 #include <SoftwareSerial.h>
 #include "TinyGPS.h"
 
+// MAX_BATTERY
 #define MAX_BATTERY 774.0
+// We are using a board which uses the pin 10/SS for the SD card (CS/SS pin)
+#define SDPORT 10
 
 Sd2Card card;
 SdVolume volume;
 SdFile root;
 
+// lcd printer
 LiquidCrystal lcd(4,5,6,7,8,9);
 
-
-// Pour le GPS
+// GPS device and serial
 TinyGPS gps;
 SoftwareSerial ss(3, 2);
-
-// We are using a board which uses the pin 10/SS for the SD card (CS/SS pin)
-const int chipSelect = 10;
 
 void setup() {
   unsigned long startTime;
@@ -35,7 +35,7 @@ void setup() {
   lcd.print('%');
   startTime = millis();
   
-  if (!card.init(SPI_HALF_SPEED, chipSelect)) {
+  if (!card.init(SPI_HALF_SPEED, SDPORT)) {
     Serial.println("SD isnotok");
     while (1);
   }
@@ -131,7 +131,7 @@ void loop(void) {
     Serial.print(" PREC=");
     Serial.print(gps.hdop() == TinyGPS::GPS_INVALID_HDOP ? 0 : gps.hdop());
   }
-  
+  /*
   gps.stats(&chars, &sentences, &failed);
   Serial.print(" CHARS=");
   Serial.print(chars);
@@ -141,4 +141,5 @@ void loop(void) {
   Serial.println(failed);
   if (chars == 0)
     Serial.println("** No characters received from GPS: check wiring **");
+    */
 }
