@@ -23,7 +23,9 @@ SoftwareSerial ss(3, 2);
 
 // GPS global datas, filled with getGPSData()
 float flat, flon;
+float total_distance;
 unsigned long age;
+unsigned long time, date;
 
 void setup() {
   unsigned long startTime;
@@ -31,7 +33,7 @@ void setup() {
   //Serial.begin(9600);
   lcd.begin(8,2);
   ss.begin(4800);
-  /*while(!Serial) {
+ /* while(!Serial) {
     ;
   }*/
   lcd.print("Battery");
@@ -97,6 +99,10 @@ void setup() {
 
   // list all files in the card with date and size
   //root.ls(LS_R | LS_DATE | LS_SIZE);
+
+  // initialisation de la distance
+  total_distance = 0.0f;
+  flat = 0.0f; flon = 0.0f;
 
   // test pour savoir si on a dépassé les 3 secondes de chargement
   currentTime = millis();
