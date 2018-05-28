@@ -6,7 +6,7 @@
 #include "GPS.h"
 
 // MAX_BATTERY
-#define MAX_BATTERY 774.0
+#define MAX_BATTERY 774.0f
 // We are using a board which uses the pin 10/SS for the SD card (CS/SS pin)
 #define SDPORT 10
 
@@ -26,19 +26,19 @@ float flat, flon;
 float total_distance;
 unsigned long age;
 unsigned long time, date;
+unsigned long startTime, journeyTime;
+bool isRecording;
 
 void setup() {
-  unsigned long startTime;
-  unsigned long currentTime;
-  //Serial.begin(9600);
+  Serial.begin(9600);
   lcd.begin(8,2);
   ss.begin(4800);
- /* while(!Serial) {
+  while(!Serial) {
     ;
-  }*/
+  }
   lcd.print("Battery");
   lcd.setCursor(0,1);
-  lcd.print(((float)analogRead(A0) * 100.0)/MAX_BATTERY);
+  lcd.print(((float)analogRead(A0) * 100.0f)/MAX_BATTERY);
   lcd.print('%');
   startTime = millis();
   
@@ -100,15 +100,18 @@ void setup() {
   // list all files in the card with date and size
   //root.ls(LS_R | LS_DATE | LS_SIZE);
 
-  // initialisation de la distance
+  // distance initialisation
   total_distance = 0.0f;
   flat = 0.0f; flon = 0.0f;
 
   // test pour savoir si on a dépassé les 3 secondes de chargement
-  currentTime = millis();
-  if (currentTime - startTime < 3000){
-    delay(3000 - (currentTime - startTime));
+  journeyTime = millis();
+  if (journeyTime - startTime < 3000){
+    delay(3000 - (journeyTime - startTime));
   }
+  // by default : start a new journey
+  startTime = millis();
+  journeyTime = 0;
 }
 
 void loop(void) {

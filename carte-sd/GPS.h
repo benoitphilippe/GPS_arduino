@@ -8,7 +8,10 @@
 
 // defines
 #define EARTH_RAYON 6371000.0 // earth rayon in metters
-#define DISTANCE_ERROR_TOLERANCE 0.001f
+#define DISTANCE_ERROR_TOLERANCE 0.005f // in kms
+#define ACQUISITION_TIME 2000 // acquisition time in milliseconds
+#define PI 3.1415927410125732421875f
+#define COURSE_DEVIATION_TOLERANCE PI/4.0f
 
 // includes
 #include <SoftwareSerial.h>
