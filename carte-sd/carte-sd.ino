@@ -10,6 +10,8 @@
 #define MAX_BATTERY 774.0f
 // We are using a board which uses the pin 10/SS for the SD card (CS/SS pin)
 #define SDPORT 10
+// Initailisation Time
+#define INITTIME 3000
 
 Sd2Card card;
 SdVolume volume;
@@ -101,14 +103,14 @@ void setup() {
   // list all files in the card with date and size
   //root.ls(LS_R | LS_DATE | LS_SIZE);
 
-  // distance initialisation
-  total_distance = 0.0f;
-  flat = 0.0f; flon = 0.0f;
+ 
+  total_distance = 0.0f;  // distance initialisation
+  flat = 0.0f; flon = 0.0f; // position initialisation
 
-  // test pour savoir si on a dépassé les 3 secondes de chargement
+  // did we get over initialisation Time
   journeyTime = millis();
-  if (journeyTime - startTime < 3000){
-    delay(3000 - (journeyTime - startTime));
+  if (journeyTime - startTime < INITTIME){
+    delay(INITTIME - (journeyTime - startTime));
   }
   // by default : start a new journey
   startTime = millis();
