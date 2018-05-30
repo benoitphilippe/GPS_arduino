@@ -4,6 +4,7 @@
 #include <SoftwareSerial.h>
 #include "TinyGPS.h"
 #include "GPS.h"
+#include "journey.h"
 
 // MAX_BATTERY
 #define MAX_BATTERY 774.0f
