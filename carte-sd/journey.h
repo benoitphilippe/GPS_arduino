@@ -7,13 +7,13 @@
 
 //defines
 #define MAX_JOURNEY_IN_MEMORY 10
+#define SEPARATOR '\t'
 
 //extern value
 extern float flat, flon;
-extern float total_distance;
+extern float l_distance;
 extern unsigned long age;
 extern unsigned long time, date;
-extern unsigned long startTime, JourneyTime;
 
 // private Structure
 struct EEPROM_datas{
@@ -42,10 +42,16 @@ class Journey{
         
         // public static methods
         static void print_all_EEPROM();
+        
         // specialised getters
         float get_m_speed(); // get medium speed in km/h 
         unsigned long get_start_date(); // return the start date of journey
         unsigned long get_start_time(); // return the start time of journey
+
+        // specialised setters
+        void start_recording(); // start recording journey
+        void end_recording(); // end recording current journey
+        void update_datas(); // update distance and time
         
         // getters for privates attributes
         byte get_ID() const;
@@ -56,16 +62,13 @@ class Journey{
     private:
         // attributes
         bool _is_recording; // is journey is currently recording
+        File file; // a reference to an opened file
+        unsigned long int time_last_record;
         EEPROM_datas eeDatas; // datas in EEPROM
         
         // private static method
         static bool is_memory_place_occupied(const byte ID);
 
 };
-
-// start recording new journey
-void newJourney();
-// end recording current journey
-void endJourney();
 
 #endif

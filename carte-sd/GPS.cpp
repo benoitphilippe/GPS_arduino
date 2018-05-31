@@ -2,7 +2,7 @@
 
 /**
  * Finaly, after experimentation, all the angle stuffs are useless.
- * It is more convenient to limit DISTANCE_ERROR_TOLERANCE to 0.002 kms
+ * It is more convenient to limit DISTANCE_ERROR_TOLERANCE to 2 metters
  * in order to detect absence of movement.
  * This code can evaluate with precision total disctance by local movement.
  */ 
@@ -12,7 +12,6 @@ bool getGPSData(){
     static float m_flat = 0.0f, m_flon = 0.0f; // medium position computes in acquisition time
     static byte npoints = 0; // points number in acquisition
     float l_flat, l_flon; // in fonction latitude and longitude
-    float l_distance; // distance in kms
     while (ss.available())
     {
         char c = ss.read();
@@ -39,13 +38,15 @@ bool getGPSData(){
 
                 // get distance between two points
                 if (flat != 0.0f && flon != 0.0f){
-                    l_distance = TinyGPS::distance_between(m_flat, m_flon, flat, flon) / 1000.0f;
+                    l_distance = TinyGPS::distance_between(m_flat, m_flon, flat, flon);
                     // check for validity of distance
                     if(l_distance < DISTANCE_ERROR_TOLERANCE){ // distance is low
                         l_distance = 0; // we suppose position is'nt moving
                     }
                 }
-                total_distance += l_distance; // total distance for this path
+                if (ptr_journey){
+                    
+                }
                 // update last medium position with new medium position
                 flat = m_flat;
                 flon = m_flon;

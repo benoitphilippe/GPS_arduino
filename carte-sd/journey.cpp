@@ -10,7 +10,7 @@
  * 
  * In EEPROM, a journey is defined by these value :
  * - ID : a byte which specifies the ID of journey, can be between 1 and MAX_JOURNEY_IN_MEMORY.
- * - Time : unsigned long int : specifies the duration in milliseconds of journey, starting time is stored in SD memory
+ * - Time : unsigned long int : specifies the duration in milltime_last_record = millis();iseconds of journey, starting time is stored in SD memory
  * - Distance : a float which represents the total distance of the journey
  * 
  * Other informations are stored in SD memory, accessible by the ID value
@@ -49,15 +49,186 @@ Journey::Journey(const byte ID){
     }
 }
 
+// methods that read from memory
+void Journey::print_coords(){ // print on serial all the coords from this Journey (from SD)
+    if (is_recording()) return; // can't read file if recording
+    String filename = "";
+    String suffix = ".txt";
+    filename = filename + eeDatas.ID + suffix;
+    if (file) file.close();
+    file = SD.open(filename , FILE_READ);
+    if (file) { // read the file
+        while(file.available()){
+            Serial.print(file.read());
+        }
+        file.close();
+    }
+    else return;
+}
+void Journey::print_EEPROM(){ // print on serial ID, distance, time and speed
+    if (is_recording()) return; // can't read EEPROM if recording
+    int eeAddress = eeDatas.ID * sizeof(EEPROM_datas);
+    Serial.print(EEPROM.read(eeAddress), DEC);
+    Serial.print("\t");
+    for (int i = eeAddress + sizeof(byte); i < eeAddress + sizeof(byte) + sizeof(unsigned long int); i++)
+        Serial.print(EEPROM.read(i), HEX);
+    Serial.print("\t");
+    for (
+        int i = eeAddress + sizeof(byte) + sizeof(unsigned long int);
+        i < eeAddress + sizeof(byte) + sizeof(unsigned long int) + sizeof(float);
+        i++
+        ){
+            Serial.print(EEPROM.read(i), HEX);
+        }
+    Serial.println(" ");
+}
+
+// specialised getters
+float Journey::get_m_speed(){ // get medium speed in km/h 
+    float speed_m_per_s = eeDatas._total_distance / float(eeDatas._time / 1000);
+    return 3.6f * speed_m_per_s;
+}
+unsigned long Journey::get_start_date() // return the start date of journey
+{
+    if (is_recording()) return 0; // can't read file if recording
+    String filename = "";
+    String suffix = ".txt";
+    filename = filename + eeDatas.ID + suffix;
+    if (file) file.close();
+    file = SD.open(filename , FILE_READ);
+    if (file) {
+        char data_content[7];
+        byte index = 0;
+        byte nb_separator = 0;
+        while (file.available())
+        {
+            char aChar = file.read();
+            if(aChar == SEPARATOR){ // count separator
+                nb_separator++;
+            }
+            else if(nb_separator == 2){ // data we want
+                data_content[index++] = aChar; // fill data content
+                data_content[index] = '\0';
+            }
+            else if (nb_separator > 2){
+                if(strlen(data_content) > 0)
+                {
+                    unsigned long date = atol(data_content);
+                    file.close();
+                    return date;
+                }
+                else { // error occured
+                    file.close();
+                    return 0;
+                }
+            }
+            else if(aChar == '\n' || aChar == '\r')// the character is CR or LF
+            {
+                break;
+            }
+        }
+        file.close();
+        return 0;
+    }
+    else return 0;
+}
+unsigned long Journey::get_start_time() // return the start time of journey
+{
+    if (is_recording()) return 0; // can't read file if recording
+    String filename = "";
+    String suffix = ".txt";
+    filename = filename + eeDatas.ID + suffix;
+    if (file) file.close();
+    file = SD.open(filename , FILE_READ);
+    if (file) {
+        char data_content[9];
+        byte index = 0;
+        byte nb_separator = 0;
+        while (file.available())
+        {
+            char aChar = file.read();
+            if(aChar == SEPARATOR){ // count separator
+                nb_separator++;
+            }
+            else if(nb_separator == 3){ // data we want
+                data_content[index++] = aChar; // fill data content
+                data_content[index] = '\0';
+            }
+            else if (aChar == '\n' || aChar == '\r'){
+                if(strlen(data_content) > 0)
+                {
+                    unsigned long time = atol(data_content);
+                    file.close();
+                    return time;
+                }
+                else { // error occured
+                    file.close();
+                    return 0;
+                }
+            }
+        }
+        file.close();
+        return 0;
+    }
+    else return 0;
+}
+
+// specialised setters
+void Journey::start_recording(){ // start recording journey
+    _is_recording = true;
+    String filename = "";
+    String suffix = ".txt";
+    filename = filename + eeDatas.ID + suffix;
+    if(file){
+        file.close();
+    }
+    file = SD.open(filename , FILE_WRITE);
+    time_last_record = millis();
+}
+void Journey::end_recording(){ // end recording current journey
+    _is_recording = false;
+    if(file){
+        file.close();
+    }
+} 
+void Journey::update_datas(){ // update distance and time
+    if (!is_recording()) return;
+    eeDatas._total_distance += l_distance;
+    eeDatas._time += (millis() - time_last_record);
+    time_last_record = millis();
+}
 // methods that write on arduino system
 void Journey::erase_from_memory(){
+    if(is_recording()) end_recording();
     for (int eeAddress = eeDatas.ID * sizeof(eeDatas); eeAddress < (eeDatas.ID + 1) * sizeof(eeDatas); eeAddress++){
         EEPROM.write(eeAddress, 255);
     }
-    // TODO : erase data also from SD
+    erase_all_points();
 }
-void Journey::erase_all_points(){} // delete all the content in the SD file
-void Journey::append_point(){} // save the current point on SD : lat, lon, date, time. from global val
+void Journey::erase_all_points(){ // delete all the content in the SD file
+    if (is_recording() == true) return; // cannot delete file if still recording
+    String filename = "";
+    String suffix = ".txt";
+    filename = filename + eeDatas.ID + suffix;
+    if (SD.exists(filename)){
+        SD.remove(filename);
+    }
+} 
+void Journey::append_point(){ // save the current point on SD : lat, lon, date, time. from global val
+    if (is_recording() == false) return; // do nothing if not recording
+    // journey is recording, get acces to SD by attribute file
+    if (file){ // ready to write
+        // write datas
+        file.print(flat);
+        file.print(SEPARATOR);
+        file.print(flon);
+        file.print(SEPARATOR);
+        file.print(date);
+        file.print(SEPARATOR);
+        file.println(time);
+        file.flush(); // flush the stream
+    }
+}
 void Journey::save_on_EEPROM(){
     // save self on EEPROM. /!\ EEPROM has limited usage. Use this method with precaution
     EEPROM.put(eeDatas.ID * sizeof(EEPROM_datas), eeDatas);
@@ -79,7 +250,7 @@ void Journey::print_all_EEPROM(){
     //  Add ID  Time        Distance
     //  ----------------------------------------------
     //  0   0   2553341     25.310              valid journey
-    //  9   255 FFFFFFFF    FFFFFFFF            none journey journey stored at this Address
+    //  9   255 FFFFFFFF    FFFFFFFF            none journey stored at this Address
 
     byte inc = 0;
     Serial.print("Add");
@@ -93,15 +264,15 @@ void Journey::print_all_EEPROM(){
     Serial.println(" ");
     Serial.println("-------------------------------------------");
     for (
-            int eeAdress = 0;
-            eeAdress < EEPROM.length() && eeAdress < MAX_JOURNEY_IN_MEMORY * sizeof(EEPROM_datas);
-            eeAdress += sizeof(EEPROM_datas)
+            int eeAddress = 0;
+            eeAddress < EEPROM.length() && eeAddress < MAX_JOURNEY_IN_MEMORY * sizeof(EEPROM_datas);
+            eeAddress += sizeof(EEPROM_datas)
     ){
-        Serial.print(eeAdress);
+        Serial.print(eeAddress);
         Serial.print("\t");
         if (Journey::is_memory_place_occupied(inc)){
             EEPROM_datas datas;
-            EEPROM.get(eeAdress, datas);
+            EEPROM.get(eeAddress, datas);
             Serial.print(datas.ID);
             Serial.print("\t");
             Serial.print(datas._time);
@@ -110,14 +281,14 @@ void Journey::print_all_EEPROM(){
             Serial.println(" ");
         }
         else{
-            Serial.print(EEPROM.read(eeAdress), DEC);
+            Serial.print(EEPROM.read(eeAddress), DEC);
             Serial.print("\t");
-            for (int i = eeAdress + sizeof(byte); i < eeAdress + sizeof(byte) + sizeof(unsigned long int); i++)
+            for (int i = eeAddress + sizeof(byte); i < eeAddress + sizeof(byte) + sizeof(unsigned long int); i++)
                 Serial.print(EEPROM.read(i), HEX);
             Serial.print("\t");
             for (
-                int i = eeAdress + sizeof(byte) + sizeof(unsigned long int);
-                i < eeAdress + sizeof(byte) + sizeof(unsigned long int) + sizeof(float);
+                int i = eeAddress + sizeof(byte) + sizeof(unsigned long int);
+                i < eeAddress + sizeof(byte) + sizeof(unsigned long int) + sizeof(float);
                 i++
                 ){
                     Serial.print(EEPROM.read(i), HEX);
@@ -127,3 +298,9 @@ void Journey::print_all_EEPROM(){
         inc++;
     }
 }
+
+// getters for privates attributes
+byte Journey::get_ID() const {return eeDatas.ID;}
+float Journey::get_total_distance() const {return eeDatas._total_distance;}
+unsigned long int Journey::get_time() const {return eeDatas._time;}
+bool Journey::is_recording() const {return _is_recording;}
