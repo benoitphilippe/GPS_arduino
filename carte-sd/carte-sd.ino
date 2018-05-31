@@ -30,7 +30,6 @@ float total_distance;
 unsigned long age;
 unsigned long time, date;
 unsigned long startTime, journeyTime;
-bool isRecording;
 
 void setup() {
   Serial.begin(9600);
@@ -106,6 +105,8 @@ void setup() {
  
   total_distance = 0.0f;  // distance initialisation
   flat = 0.0f; flon = 0.0f; // position initialisation
+
+  // Journey test
 
   // did we get over initialisation Time
   journeyTime = millis();
