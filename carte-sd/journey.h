@@ -31,7 +31,7 @@ class Journey{
         Journey(const byte ID); // take an existing journey, or take this special space of memory
 
         // methods that read from memory
-        void print_coords(); // print on serial all the coords from this Journey (from SD)
+        void print_coords(); // print on serial all the coords of this Journey (from SD)
         void print_EEPROM(); // print on serial ID, distance, time and speed
 
         // methods that write on arduino system
@@ -50,7 +50,7 @@ class Journey{
 
         // specialised setters
         void start_recording(); // start recording journey
-        void end_recording(); // end recording current journey
+        void stop_recording(); // stop recording current journey
         void update_datas(); // update distance and time
         
         // getters for privates attributes

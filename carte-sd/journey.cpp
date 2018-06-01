@@ -10,7 +10,7 @@
  * 
  * In EEPROM, a journey is defined by these value :
  * - ID : a byte which specifies the ID of journey, can be between 1 and MAX_JOURNEY_IN_MEMORY.
- * - Time : unsigned long int : specifies the duration in milltime_last_record = millis();iseconds of journey, starting time is stored in SD memory
+ * - Time : unsigned long int : specifies the duration in milliseconds of journey, starting time is stored in SD memory
  * - Distance : a float which represents the total distance of the journey
  * 
  * Other informations are stored in SD memory, accessible by the ID value
@@ -32,6 +32,9 @@ Journey::Journey(){
     eeDatas._total_distance = 0.0f;
     eeDatas._time = 0;
     // ready to be saved
+    
+    // at start, is_recording is false
+    _is_recording = false;
 }
 
 Journey::Journey(const byte ID){
@@ -47,19 +50,22 @@ Journey::Journey(const byte ID){
         eeDatas._total_distance = 0.0f;
         eeDatas._time = 0;
     }
+    // at start, is_recording is false
+    _is_recording = false;
 }
 
 // methods that read from memory
-void Journey::print_coords(){ // print on serial all the coords from this Journey (from SD)
+void Journey::print_coords(){ // print on serial all the coords of this Journey (from SD)
     if (is_recording()) return; // can't read file if recording
     String filename = "";
     String suffix = ".txt";
     filename = filename + eeDatas.ID + suffix;
     if (file) file.close();
-    file = SD.open(filename , FILE_READ);
+    if (SD.exists(filename.c_str()) == false) return;
+    file = SD.open(filename.c_str() , FILE_READ);
     if (file) { // read the file
         while(file.available()){
-            Serial.print(file.read());
+            Serial.print(char(file.read()));
         }
         file.close();
     }
@@ -68,19 +74,33 @@ void Journey::print_coords(){ // print on serial all the coords from this Journe
 void Journey::print_EEPROM(){ // print on serial ID, distance, time and speed
     if (is_recording()) return; // can't read EEPROM if recording
     int eeAddress = eeDatas.ID * sizeof(EEPROM_datas);
-    Serial.print(EEPROM.read(eeAddress), DEC);
-    Serial.print("\t");
-    for (int i = eeAddress + sizeof(byte); i < eeAddress + sizeof(byte) + sizeof(unsigned long int); i++)
-        Serial.print(EEPROM.read(i), HEX);
-    Serial.print("\t");
-    for (
-        int i = eeAddress + sizeof(byte) + sizeof(unsigned long int);
-        i < eeAddress + sizeof(byte) + sizeof(unsigned long int) + sizeof(float);
-        i++
-        ){
+    Serial.print(EEPROM.read(eeAddress), HEX);
+    Serial.print(SEPARATOR);
+    if (Journey::is_memory_place_occupied(eeDatas.ID)){
+            EEPROM_datas datas;
+            EEPROM.get(eeAddress, datas);
+            Serial.print(datas.ID);
+            Serial.print(SEPARATOR);
+            Serial.print(datas._time);
+            Serial.print(SEPARATOR);
+            Serial.print(datas._total_distance);
+            Serial.println(" ");
+    }
+    else {
+        Serial.print(EEPROM.read(eeAddress));
+        Serial.print(SEPARATOR);
+        for (int i = eeAddress + sizeof(byte); i < eeAddress + sizeof(byte) + sizeof(unsigned long int); i++)
             Serial.print(EEPROM.read(i), HEX);
-        }
-    Serial.println(" ");
+        Serial.print(SEPARATOR);
+        for (
+            int i = eeAddress + sizeof(byte) + sizeof(unsigned long int);
+            i < eeAddress + sizeof(byte) + sizeof(unsigned long int) + sizeof(float);
+            i++
+            ){
+                Serial.print(EEPROM.read(i), HEX);
+            }
+        Serial.println(" ");
+    }
 }
 
 // specialised getters
@@ -95,14 +115,14 @@ unsigned long Journey::get_start_date() // return the start date of journey
     String suffix = ".txt";
     filename = filename + eeDatas.ID + suffix;
     if (file) file.close();
-    file = SD.open(filename , FILE_READ);
+    file = SD.open(filename.c_str() , FILE_READ);
     if (file) {
         char data_content[7];
         byte index = 0;
         byte nb_separator = 0;
         while (file.available())
         {
-            char aChar = file.read();
+            char aChar = char(file.read());
             if(aChar == SEPARATOR){ // count separator
                 nb_separator++;
             }
@@ -139,14 +159,14 @@ unsigned long Journey::get_start_time() // return the start time of journey
     String suffix = ".txt";
     filename = filename + eeDatas.ID + suffix;
     if (file) file.close();
-    file = SD.open(filename , FILE_READ);
+    file = SD.open(filename.c_str() , FILE_READ);
     if (file) {
         char data_content[9];
         byte index = 0;
         byte nb_separator = 0;
         while (file.available())
         {
-            char aChar = file.read();
+            char aChar = char(file.read());
             if(aChar == SEPARATOR){ // count separator
                 nb_separator++;
             }
@@ -162,15 +182,15 @@ unsigned long Journey::get_start_time() // return the start time of journey
                     return time;
                 }
                 else { // error occured
-                    file.close();
-                    return 0;
+                    // break to close
+                    break;
                 }
             }
         }
         file.close();
         return 0;
     }
-    else return 0;
+    else return 0; // file cannot be openned
 }
 
 // specialised setters
@@ -182,28 +202,36 @@ void Journey::start_recording(){ // start recording journey
     if(file){
         file.close();
     }
-    file = SD.open(filename , FILE_WRITE);
+    file = SD.open(filename.c_str() , FILE_WRITE);
     time_last_record = millis();
 }
-void Journey::end_recording(){ // end recording current journey
+void Journey::stop_recording(){ // stop recording current journey
     _is_recording = false;
     if(file){
         file.close();
     }
 } 
 void Journey::update_datas(){ // update distance and time
-    if (!is_recording()) return;
+    if (is_recording() == false) return; // must record
     eeDatas._total_distance += l_distance;
     eeDatas._time += (millis() - time_last_record);
     time_last_record = millis();
 }
 // methods that write on arduino system
 void Journey::erase_from_memory(){
-    if(is_recording()) end_recording();
-    for (int eeAddress = eeDatas.ID * sizeof(eeDatas); eeAddress < (eeDatas.ID + 1) * sizeof(eeDatas); eeAddress++){
+    if(is_recording()) return; // exit if still recording
+    for (
+            int eeAddress = eeDatas.ID * sizeof(eeDatas);
+            eeAddress < (eeDatas.ID + 1) * sizeof(eeDatas);
+            eeAddress++
+        ){
         EEPROM.write(eeAddress, 255);
     }
     erase_all_points();
+    // reset principale values from the journey
+    eeDatas._total_distance = 0.0f;
+    eeDatas._time = 0;
+
 }
 void Journey::erase_all_points(){ // delete all the content in the SD file
     if (is_recording() == true) return; // cannot delete file if still recording
@@ -219,15 +247,16 @@ void Journey::append_point(){ // save the current point on SD : lat, lon, date, 
     // journey is recording, get acces to SD by attribute file
     if (file){ // ready to write
         // write datas
-        file.print(flat);
+        file.print(flat, 15);
         file.print(SEPARATOR);
-        file.print(flon);
+        file.print(flon, 15);
         file.print(SEPARATOR);
         file.print(date);
         file.print(SEPARATOR);
         file.println(time);
         file.flush(); // flush the stream
     }
+     
 }
 void Journey::save_on_EEPROM(){
     // save self on EEPROM. /!\ EEPROM has limited usage. Use this method with precaution
@@ -254,12 +283,12 @@ void Journey::print_all_EEPROM(){
 
     byte inc = 0;
     Serial.print("Add");
-    Serial.print("\t");
+    Serial.print(SEPARATOR);
     Serial.print("ID");
-    Serial.print("\t");
+    Serial.print(SEPARATOR);
     Serial.print("Time");
-    Serial.print("\t");
-    Serial.print("\t");
+    Serial.print(SEPARATOR);
+    Serial.print(SEPARATOR);
     Serial.print("Distance");
     Serial.println(" ");
     Serial.println("-------------------------------------------");
@@ -268,24 +297,24 @@ void Journey::print_all_EEPROM(){
             eeAddress < EEPROM.length() && eeAddress < MAX_JOURNEY_IN_MEMORY * sizeof(EEPROM_datas);
             eeAddress += sizeof(EEPROM_datas)
     ){
-        Serial.print(eeAddress);
-        Serial.print("\t");
+        Serial.print(eeAddress, HEX);
+        Serial.print(SEPARATOR);
         if (Journey::is_memory_place_occupied(inc)){
             EEPROM_datas datas;
             EEPROM.get(eeAddress, datas);
             Serial.print(datas.ID);
-            Serial.print("\t");
+            Serial.print(SEPARATOR);
             Serial.print(datas._time);
-            Serial.print("\t");
+            Serial.print(SEPARATOR);
             Serial.print(datas._total_distance);
             Serial.println(" ");
         }
         else{
-            Serial.print(EEPROM.read(eeAddress), DEC);
-            Serial.print("\t");
+            Serial.print(EEPROM.read(eeAddress));
+            Serial.print(SEPARATOR);
             for (int i = eeAddress + sizeof(byte); i < eeAddress + sizeof(byte) + sizeof(unsigned long int); i++)
                 Serial.print(EEPROM.read(i), HEX);
-            Serial.print("\t");
+            Serial.print(SEPARATOR);
             for (
                 int i = eeAddress + sizeof(byte) + sizeof(unsigned long int);
                 i < eeAddress + sizeof(byte) + sizeof(unsigned long int) + sizeof(float);
