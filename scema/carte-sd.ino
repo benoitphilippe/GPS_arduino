@@ -44,13 +44,13 @@ void setup() {
   flat = 0.0f; flon = 0.0f; // position initialisation
 
   // Journey test
-  ptr_journey = new Journey(0); // create or continue a journey with ID 0 (up to MAX_JOURNEY_IN_MEMORY IDs from journey.h)
+  ptr_journey = new Journey(4); // create or continue a journey with ID 0 (up to MAX_JOURNEY_IN_MEMORY IDs from journey.h)
   /* if needed, next two lines reset the journey */
   //ptr_journey->erase_from_memory(); // delete datas (EEPROM and SD) from this journey (ID 0), and reset distance and time
   //ptr_journey->save_on_EEPROM(); // save reseted values on EEPROM
   Journey::print_all_EEPROM(); // print EEPROM status (of all journey)
   ptr_journey->print_coords(); // print coords saved in SD for this journey (must be stop_recording() mode)
-  ptr_journey->start_recording(); // allow update_datas() and append_point()
+  //ptr_journey->start_recording(); // allow update_datas() and append_point()
 }
 
 void loop(void) {
@@ -71,10 +71,12 @@ void loop(void) {
 
 
       if(count == 10){ // system D for stop record
-        Serial.println("stop");
-        ptr_journey->stop_recording(); // stop recording
-        ptr_journey->save_on_EEPROM(); // save new distance and time of journey in EEPROM /!\ do not call it too often
-        delete ptr_journey; // free pointer /!\ stop recording must be called first
+        Serial.println(ptr_journey->get_total_distance());
+        Serial.println(ptr_journey->get_time());
+        //ptr_journey->stop_recording(); // stop recording
+        //ptr_journey->save_on_EEPROM(); // save new distance and time of journey in EEPROM /!\ do not call it too often
+        //delete ptr_journey; // free pointer /!\ stop recording must be called first
+        count = 0;
       }
 
     }
