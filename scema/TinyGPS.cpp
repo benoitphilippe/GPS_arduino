@@ -338,12 +338,24 @@ float TinyGPS::course_to (float lat1, float long1, float lat2, float long2)
   return degrees(a2);
 }
 
-const char *TinyGPS::cardinal (float course)
+const char *TinyGPS::cardinal (float course, byte cardinal_precision) // cardianl precision can be 4, 8, 16
 {
   static const char* directions[] = {"N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"};
 
   int direction = (int)((course + 11.25f) / 22.5f);
-  return directions[direction % 16];
+  if (cardinal_precision == 4){
+    /*if (direction % 16 < 3 || direction % 16 == 15) // N
+      return directions[0];
+    else if (direction % 16 < 7) return directions[4]; // E
+    else if (direction % 16 < 11) return directions[8]; // S
+    else return directions[12]; // W*/
+    return directions[((direction % 16) / 4) * 4];
+  }
+  else if (cardinal_precision == 8){
+    return directions[((direction % 16) / 2) * 2];
+  }
+  else
+    return directions[direction % 16];
 }
 
 // lat/long in MILLIONTHs of a degree and age of fix in milliseconds

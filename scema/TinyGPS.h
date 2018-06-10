@@ -93,7 +93,7 @@ public:
 
   static float distance_between (float lat1, float long1, float lat2, float long2);
   static float course_to (float lat1, float long1, float lat2, float long2);
-  static const char *cardinal(float course);
+  static const char *cardinal(float course, byte cardinal_precision = 16);
 
 #ifndef _GPS_NO_STATS
   void stats(unsigned long *chars, unsigned short *good_sentences, unsigned short *failed_cs);
