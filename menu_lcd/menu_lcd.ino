@@ -19,7 +19,7 @@ int input = 0;
 enum fenetres {
   fen1, fen2, fen3, fen11, fen12, fen13, fen14, fen22, fen32, fen43, fen44, fen45, fen46, fen47, fen48, fen49, fen50, fen51, fen52, fen63, fen64, fen73, fen74, fen75, fen76
   };
-fenetres menuTest = fen1;
+fenetres menu = fen1;
 //currentTrip pour gérer le trip à exporter/afficher les datas, à changer dans les fen43-52
 
 LiquidCrystal lcd(4,5,6,7,8,9);
@@ -56,7 +56,7 @@ void setup() {
 void loop() {
   input = clavier();
   lcd.setCursor(1,0);
-  lcd.print(((int)menuTest));
+  lcd.print(((int)menu));
   lcd.setCursor(0,1);
   lcd.print(((int)current_enable));
   lcd.setCursor(7,1);
@@ -66,72 +66,72 @@ void loop() {
       switch(input)
     {
       case 1:
-        if (menuTest==fen11|menuTest==fen12|menuTest==fen13|menuTest==fen14) {
-          menuTest=fen1;
+        if (menu==fen11|menu==fen12|menu==fen13|menu==fen14) {
+          menu=fen1;
         }
-        else if (menuTest==fen22) {
-          menuTest=fen2;
+        else if (menu==fen22) {
+          menu=fen2;
         }
-        else if (menuTest==fen32) {
-          menuTest=fen22;
+        else if (menu==fen32) {
+          menu=fen22;
         }
-        else if (menuTest==fen43|menuTest==fen44|menuTest==fen45|menuTest==fen46|menuTest==fen47|menuTest==fen48|menuTest==fen49|menuTest==fen50|menuTest==fen51|menuTest==fen52) {
-          menuTest=fen3;
+        else if (menu==fen43|menu==fen44|menu==fen45|menu==fen46|menu==fen47|menu==fen48|menu==fen49|menu==fen50|menu==fen51|menu==fen52) {
+          menu=fen3;
         }
-        else if (menuTest==fen63|menuTest==fen64) {
-          menuTest=fen43;
+        else if (menu==fen63|menu==fen64) {
+          menu=fen43;
         }
-        else if (menuTest==fen73) {
-          menuTest=fen63;
+        else if (menu==fen73) {
+          menu=fen63;
         }
-        else if (menuTest==fen74|menuTest==fen75|menuTest==fen76) {
-          menuTest=fen64;
+        else if (menu==fen74|menu==fen75|menu==fen76) {
+          menu=fen64;
         }
         break;
 
       case 2:
-        if (menuTest!=fen1&menuTest!=fen11&menuTest!=fen22&menuTest!=fen32&menuTest!=fen43&menuTest!=fen63&menuTest!=fen73&menuTest!=fen74) {
-          menuTest=int(menuTest)-1;
+        if (menu!=fen1&menu!=fen11&menu!=fen22&menu!=fen32&menu!=fen43&menu!=fen63&menu!=fen73&menu!=fen74) {
+          menu=int(menu)-1;
         }
         //
         break;
         
       case 3:
-        if (menuTest!=fen3&menuTest!=fen14&menuTest!=fen22&menuTest!=fen32&menuTest!=fen52&menuTest!=fen64&menuTest!=fen73&menuTest!=fen76) {
-          menuTest=int(menuTest)+1;
+        if (menu!=fen3&menu!=fen14&menu!=fen22&menu!=fen32&menu!=fen52&menu!=fen64&menu!=fen73&menu!=fen76) {
+          menu=int(menu)+1;
         }
         break;
 
       case 4:
-        if (menuTest==fen11|menuTest==fen12|menuTest==fen13|menuTest==fen14|menuTest==fen32|menuTest==fen73|menuTest==fen74|menuTest==fen75|menuTest==fen76) {
+        if (menu==fen11|menu==fen12|menu==fen13|menu==fen14|menu==fen32|menu==fen73|menu==fen74|menu==fen75|menu==fen76) {
           break;
         }
-        if (menuTest==fen1) {
-          menuTest=fen11;
+        if (menu==fen1) {
+          menu=fen11;
         }
-        else if (menuTest==fen2) {
-          menuTest=fen22;
+        else if (menu==fen2) {
+          menu=fen22;
         }
-        else if (menuTest==fen22) {
-          menuTest=fen32;
+        else if (menu==fen22) {
+          menu=fen32;
         }
-        else if (menuTest==fen3) {
-          menuTest=fen43;
+        else if (menu==fen3) {
+          menu=fen43;
         }
-        else if (menuTest==fen43|menuTest==fen44|menuTest==fen45|menuTest==fen46|menuTest==fen47|menuTest==fen48|menuTest==fen49|menuTest==fen50|menuTest==fen51|menuTest==fen52) {
-          menuTest=fen63;
+        else if (menu==fen43|menu==fen44|menu==fen45|menu==fen46|menu==fen47|menu==fen48|menu==fen49|menu==fen50|menu==fen51|menu==fen52) {
+          menu=fen63;
         }
-        else if (menuTest==fen63) {
-          menuTest=fen73;
+        else if (menu==fen63) {
+          menu=fen73;
         }
-        else if (menuTest==fen64) {
-          menuTest=fen74;
+        else if (menu==fen64) {
+          menu=fen74;
         }
         break;
       }
     }
 
-    switch(menuTest)
+    switch(menu)
   {
     case fen1:
       //lcd.clear();
