@@ -1,59 +1,104 @@
-#include "Bounce2.h"
+#include <SPI.h>
+#include <SD.h>
 #include <LiquidCrystal.h>
+#include <SoftwareSerial.h>
+#include "TinyGPS.h"
+#include "GPS.h"
+#include "journey.h"
+#include "Bounce2.h"
 
-//Valeur batterie maximum
-#define MAX_BATTERY 774.0
+// MAX_BATTERY
+#define MAX_BATTERY 774.0f
+// We are using a board which uses the pin 10/SS for the SD card (CS/SS pin)
+#define SDPORT 10
 
-//Boutons
+// lcd printer
+LiquidCrystal lcd(4,5,6,7,8,9);
+
+// GPS serial and device
+TinyGPS gps;
+SoftwareSerial ss(3, 2);
+
+// Buttons
 #define BP0 16 
 #define BP1 15
 #define BPEN 17
 
+// Debouncers
 Bounce debouncer1 = Bounce();
 Bounce debouncer2 = Bounce();
 Bounce debouncer3 = Bounce();
 // if button is pushed 1, else 0
 int current_enable;
 
+// GPS global datas, filled with getGPSData()
+float flat, flon;
+float l_distance; // distance in meters
+unsigned long age;
+unsigned long time, date;
+Journey* ptr_journey;
+
+// Input and menu variables
 int input = 0;
 enum fenetres {
-  trip1, trip2, trip3, trip4, trip5, trip6, trip7, trip8, trip9, trip10, fen1, fen2, fen11, fen12, fen32, fen33, fen34, fen42, fen43, fen44, fen45, fen46, fen56
+  trip1, trip2, trip3, trip4, trip5, trip6, trip7, trip8, trip9, trip10, fen1, fen2, fen11, fen12, fen13, fen14, fen32, fen33, fen34, fen42, fen43, fen44, fen45, fen46, fen56
   };
 fenetres menu = fen1;
-//pour gérer le trip à exporter/afficher les datas, à changer dans les fen22-31
-int currentTrip; 
-LiquidCrystal lcd(4,5,6,7,8,9);
+//Keep track of trip chosen by user
+int currentTrip;
 
 void setup() {
-
-  //DEBUG
-  ///////////////////////
-  
+  // Initialize display and communication
+  Serial.begin(9600);
   lcd.begin(8,2);
+  ss.begin(4800);
+  while(!Serial) {
+    ;
+  }
 
+  // Initialize button with debouncers
   pinMode(BP0, INPUT_PULLUP);
   debouncer1.attach(BP0);
-  debouncer1.interval(50);
+  debouncer1.interval(5);
   
   pinMode(BP1, INPUT_PULLUP);
   debouncer2.attach(BP1);
-  debouncer2.interval(50);
+  debouncer2.interval(5);
 
   pinMode(BPEN, INPUT_PULLUP);
   debouncer3.attach(BPEN);
-  debouncer3.interval(50);
+  debouncer3.interval(5);
   
-  // Initilisation : afficher batterie
+  // Print battery for 3sec
   lcd.print("BATTERY");
   lcd.setCursor(0,1);
-  lcd.print(((float)analogRead(A0) * 100.0)/MAX_BATTERY);
+  lcd.print(((float)analogRead(A0) * 100.0f)/MAX_BATTERY);
   lcd.print('%');
   delay(3000);
   lcd.clear();
   delay(100);
+  if (!SD.begin(SDPORT)) {
+    while (1);
+  }
+
+  l_distance = 0.0f;  // distance initialisation
+  flat = 0.0f; flon = 0.0f; // position initialisation
+
+  // Journey test
+  //ptr_journey = new Journey(4); // create or continue a journey with ID 0 (up to MAX_JOURNEY_IN_MEMORY IDs from journey.h)
+  /* if needed, next two lines reset the journey */
+  //ptr_journey->erase_from_memory(); // delete datas (EEPROM and SD) from this journey (ID 0), and reset distance and time
+  //ptr_journey->save_on_EEPROM(); // save reseted values on EEPROM
+  //Journey::print_all_EEPROM(); // print EEPROM status (of all journey)
+  //ptr_journey->print_coords(); // print coords saved in SD for this journey (must be stop_recording() mode)
+  //ptr_journey->start_recording(); // allow update_datas() and append_point()
+
 }
 
 void loop() {
+  static int count = 0;
+
+  // Input & UI
   input = clavier();
   
   //////////////////
@@ -78,10 +123,13 @@ void loop() {
         else if (menu==trip1|menu==trip2|menu==trip3|menu==trip4|menu==trip5|menu==trip6|menu==trip7|menu==trip8|menu==trip9|menu==trip10) {
           menu=fen2;
         }
+        // Return to memory slot selection
         else if (menu==fen32|menu==fen33|menu==fen34) {
-          menu=trip1;
+          // Erasing previous pointer
+          delete ptr_journey;
+          menu=currentTrip;
+          //menu=trip1;
         }
-        // Stop data export
         else if (menu==fen42) {
           menu=fen32;
         }
@@ -91,8 +139,10 @@ void loop() {
         else if (menu==fen46) {
           menu=fen34;
         }
-        // Stop data acquistion
+        // Stop recording
         else if (menu==fen56) {
+          ptr_journey->stop_recording();
+          ptr_journey->save_on_EEPROM();
           menu=fen46;
         }
         break;
@@ -132,23 +182,25 @@ void loop() {
         else if (menu==trip1|menu==trip2|menu==trip3|menu==trip4|menu==trip5|menu==trip6|menu==trip7|menu==trip8|menu==trip9|menu==trip10) {
           // Saving memory slot chosen by user
           currentTrip=menu;
+          // Create a journey with currentTrip ID
+          ptr_journey = new Journey(currentTrip);
           menu=fen32;
         }
         // Export to USB
         else if (menu==fen32) {
-          //
           menu=fen42;
         }
         // Display chosen trip datas'
         else if (menu==fen33) {
           menu=fen43;
         }
-        // New trip
+        // New trip confirmation
         else if (menu==fen34) {
           menu=fen46;
         }
         // Acquisition validation
         else if (menu==fen46) {
+          ptr_journey->start_recording();
           menu=fen56;
         }
         break;
@@ -167,9 +219,11 @@ void loop() {
       break;
     case fen11:
       lcd.setCursor(0,0);
-      lcd.print("X");
+      // X coordinates
+      lcd.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6);
       lcd.setCursor(0,1);
-      lcd.print("Y");
+      // Y coordinates
+      lcd.print(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6);
       //setCursor(1,2);
       //lcd.print("fen11");
       break;
@@ -266,6 +320,13 @@ void loop() {
       lcd.print("EXPORT");
       lcd.setCursor(0,1);
       lcd.print("IN PROG");
+      
+      // Exporting datas
+      ptr_journey->print_coords();
+
+      // When finished
+      lcd.setCursor(0,1);
+      lcd.print(" DONE ");
       //lcd.setCursor(1,2);
       //lcd.print("fen42");
       break;
@@ -273,7 +334,7 @@ void loop() {
       lcd.setCursor(0,0);
       lcd.print("SPEEDAVG");
       lcd.setCursor(0,1);
-      lcd.print("SAVAVIT");
+      lcd.print(3600*(ptr_journey->get_total_distance()/ptr_journey->get_time()));
       //lcd.setCursor(1,2);
       //lcd.print("fen43");
       break;
@@ -281,7 +342,7 @@ void loop() {
       lcd.setCursor(0,0);
       lcd.print("LENGTH");
       lcd.setCursor(0,1);
-      lcd.print("CMB");
+      lcd.println(ptr_journey->get_total_distance()/1000);
       //lcd.setCursor(1,2);
       //lcd.print("fen44");
       break;
@@ -289,7 +350,7 @@ void loop() {
       lcd.setCursor(0,0);
       lcd.print("DURATION");
       lcd.setCursor(0,1);
-      lcd.print("4EVER");
+      lcd.println(ptr_journey->get_time()/1000);
       //lcd.setCursor(1,2);
       //lcd.print("fen45");
       break;
@@ -319,5 +380,15 @@ void loop() {
       lcd.setCursor(1,2);
       lcd.print("REBOOT");
       break;
-  }
+  } 
+
+  // GPS data fetching
+  if (getGPSData())
+    {      
+      /** Each time GPS get new datas, call update_datas() and append point(). don't remove those function
+       *  These fonctions won't do anything if start_recording() was not called or if stop_recording() was called
+       */ 
+      ptr_journey->update_datas(); // update distance and time, do nothing without start_recording()
+      ptr_journey->append_point(); // add new point in SD file, do nothing without start_recording()
+    }
 }
