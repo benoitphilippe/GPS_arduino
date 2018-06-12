@@ -12,16 +12,16 @@
 Bounce debouncer1 = Bounce();
 Bounce debouncer2 = Bounce();
 Bounce debouncer3 = Bounce();
+// if button is pushed 1, else 0
 int current_enable;
 
-int action = 0;
 int input = 0;
 enum fenetres {
-  fen1, fen2, fen3, fen11, fen12, fen13, fen14, fen22, fen32, fen43, fen44, fen45, fen46, fen47, fen48, fen49, fen50, fen51, fen52, fen63, fen64, fen73, fen74, fen75, fen76
+  trip1, trip2, trip3, trip4, trip5, trip6, trip7, trip8, trip9, trip10, fen1, fen2, fen11, fen12, fen32, fen33, fen34, fen42, fen43, fen44, fen45, fen46, fen56
   };
 fenetres menu = fen1;
-//currentTrip pour gérer le trip à exporter/afficher les datas, à changer dans les fen43-52
-
+//pour gérer le trip à exporter/afficher les datas, à changer dans les fen22-31
+int currentTrip; 
 LiquidCrystal lcd(4,5,6,7,8,9);
 
 void setup() {
@@ -33,15 +33,15 @@ void setup() {
 
   pinMode(BP0, INPUT_PULLUP);
   debouncer1.attach(BP0);
-  debouncer1.interval(5);
+  debouncer1.interval(50);
   
   pinMode(BP1, INPUT_PULLUP);
   debouncer2.attach(BP1);
-  debouncer2.interval(5);
+  debouncer2.interval(50);
 
   pinMode(BPEN, INPUT_PULLUP);
   debouncer3.attach(BPEN);
-  debouncer3.interval(5);
+  debouncer3.interval(50);
   
   // Initilisation : afficher batterie
   lcd.print("BATTERY");
@@ -55,77 +55,101 @@ void setup() {
 
 void loop() {
   input = clavier();
-  lcd.setCursor(1,0);
-  lcd.print(((int)menu));
-  lcd.setCursor(0,1);
-  lcd.print(((int)current_enable));
-  lcd.setCursor(7,1);
+  
+  //////////////////
+  // MENU DEBUG
+  //lcd.setCursor(1,0);
+  //lcd.print(((int)menu));
+  //lcd.setCursor(0,1);
+  //lcd.print(((int)current_enable));
+  //lcd.setCursor(7,1);
+  //////////////////
+  
   if (input != 0) {
     lcd.clear();
       
       switch(input)
     {
+      // Button 1 is "cancel" or "return"
       case 1:
-        if (menu==fen11|menu==fen12|menu==fen13|menu==fen14) {
+        if (menu==fen11|menu==fen12) {
           menu=fen1;
         }
-        else if (menu==fen22) {
+        else if (menu==trip1|menu==trip2|menu==trip3|menu==trip4|menu==trip5|menu==trip6|menu==trip7|menu==trip8|menu==trip9|menu==trip10) {
           menu=fen2;
         }
-        else if (menu==fen32) {
-          menu=fen22;
+        else if (menu==fen32|menu==fen33|menu==fen34) {
+          menu=trip1;
         }
-        else if (menu==fen43|menu==fen44|menu==fen45|menu==fen46|menu==fen47|menu==fen48|menu==fen49|menu==fen50|menu==fen51|menu==fen52) {
-          menu=fen3;
+        // Stop data export
+        else if (menu==fen42) {
+          menu=fen32;
         }
-        else if (menu==fen63|menu==fen64) {
-          menu=fen43;
+        else if (menu==fen43|menu==fen44|menu==fen45) {
+          menu=fen33;
         }
-        else if (menu==fen73) {
-          menu=fen63;
+        else if (menu==fen46) {
+          menu=fen34;
         }
-        else if (menu==fen74|menu==fen75|menu==fen76) {
-          menu=fen64;
+        // Stop data acquistion
+        else if (menu==fen56) {
+          menu=fen46;
         }
         break;
-
+      
+      // Button 2 is "up"
       case 2:
-        if (menu!=fen1&menu!=fen11&menu!=fen22&menu!=fen32&menu!=fen43&menu!=fen63&menu!=fen73&menu!=fen74) {
+        // Preventing from jumping menus
+        if (menu!=fen1&menu!=fen11&menu!=trip1&menu!=fen32&menu!=fen42&menu!=fen43&menu!=fen46&menu!=fen56) {
           menu=int(menu)-1;
         }
         //
         break;
-        
+
+      // Button 3 is "down"
       case 3:
-        if (menu!=fen3&menu!=fen14&menu!=fen22&menu!=fen32&menu!=fen52&menu!=fen64&menu!=fen73&menu!=fen76) {
+        // Preventing from jumping menus
+        if (menu!=fen2&menu!=fen12&menu!=trip10&menu!=fen34&menu!=fen42&menu!=fen45&menu!=fen46&menu!=fen56) {
           menu=int(menu)+1;
         }
         break;
 
+      // Button 4 is "enter"
       case 4:
-        if (menu==fen11|menu==fen12|menu==fen13|menu==fen14|menu==fen32|menu==fen73|menu==fen74|menu==fen75|menu==fen76) {
+        // Preventing from jumping menus
+        if (menu==fen11|menu==fen12|menu==fen42|menu==fen43|menu==fen44|menu==fen45|menu==fen56) {
           break;
         }
+        // Enters "current coordinates" menu
         if (menu==fen1) {
           menu=fen11;
         }
+        // Enters "memory slots" menu
         else if (menu==fen2) {
-          menu=fen22;
+          menu=trip1;
         }
-        else if (menu==fen22) {
+        // List of memory slots
+        else if (menu==trip1|menu==trip2|menu==trip3|menu==trip4|menu==trip5|menu==trip6|menu==trip7|menu==trip8|menu==trip9|menu==trip10) {
+          // Saving memory slot chosen by user
+          currentTrip=menu;
           menu=fen32;
         }
-        else if (menu==fen3) {
+        // Export to USB
+        else if (menu==fen32) {
+          //
+          menu=fen42;
+        }
+        // Display chosen trip datas'
+        else if (menu==fen33) {
           menu=fen43;
         }
-        else if (menu==fen43|menu==fen44|menu==fen45|menu==fen46|menu==fen47|menu==fen48|menu==fen49|menu==fen50|menu==fen51|menu==fen52) {
-          menu=fen63;
+        // New trip
+        else if (menu==fen34) {
+          menu=fen46;
         }
-        else if (menu==fen63) {
-          menu=fen73;
-        }
-        else if (menu==fen64) {
-          menu=fen74;
+        // Acquisition validation
+        else if (menu==fen46) {
+          menu=fen56;
         }
         break;
       }
@@ -134,184 +158,166 @@ void loop() {
     switch(menu)
   {
     case fen1:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("DISPLAY");
-      lcd.setCursor(1,2);
-      lcd.print("fen1");
+      lcd.setCursor(0,0);
+      lcd.println("DISPLAY ");
+      lcd.setCursor(0,1);
+      lcd.print("COORD");
+      //setCursor(1,2);
+      //lcd.print("fen1");
       break;
     case fen11:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("DISPLAY");
-      lcd.setCursor(1,2);
-      lcd.print("fen11");
+      lcd.setCursor(0,0);
+      lcd.print("X");
+      lcd.setCursor(0,1);
+      lcd.print("Y");
+      //setCursor(1,2);
+      //lcd.print("fen11");
       break;
     case fen12:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("DISPLAY");
-      lcd.setCursor(1,2);
-      lcd.print("fen12");
-      break;
-    case fen13:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("DISPLAY");
-      lcd.setCursor(1,2);
-      lcd.print("fen13");
-      break;
-    case fen14:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("DISPLAY");
-      lcd.setCursor(1,2);
-      lcd.print("fen14");
+      lcd.setCursor(0,0);
+      lcd.print("Z");
+      //setCursor(1,2);
+      //lcd.print("fen12");
       break;
     case fen2:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("NEW");
-      lcd.setCursor(1,2);
-      lcd.print("fen2");
+      lcd.setCursor(0,0);
+      lcd.print("RECORDS");
+      //setCursor(1,2);
+      //lcd.print("fen2");
       break;
-    case fen22:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("NEW");
-      lcd.setCursor(1,2);
-      lcd.print("fen22");
+    case trip1:
+      lcd.setCursor(0,0);
+      lcd.print("TRIP 1");
+      //setCursor(1,2);
+      //lcd.print("trip1");
+      break;
+    case trip2:
+      lcd.setCursor(0,0);
+      lcd.print("TRIP 2");
+      //lcd.setCursor(1,2);
+      //lcd.print("trip2");
+      break;
+    case trip3:
+      lcd.setCursor(0,0);
+      lcd.print("TRIP 3");
+      //lcd.setCursor(1,2);
+      //lcd.print("trip3");
+      break;
+    case trip4:
+      lcd.setCursor(0,0);
+      lcd.print("TRIP 4");
+      //lcd.setCursor(1,2);
+      //lcd.print("trip4");
+      break;
+    case trip5:
+      lcd.setCursor(0,0);
+      lcd.print("TRIP 5");
+      //lcd.setCursor(1,2);
+      //lcd.print("trip5");
+      break;
+    case trip6:
+      lcd.setCursor(0,0);
+      lcd.print("TRIP 6");
+      //lcd.setCursor(1,2);
+      //lcd.print("trip6");
+      break;      
+    case trip7:
+      lcd.setCursor(0,0);
+      lcd.print("TRIP 7");
+      //lcd.setCursor(1,2);
+      //lcd.print("trip7");
+      break;
+    case trip8:
+      lcd.setCursor(0,0);
+      lcd.print("TRIP 8");
+      //lcd.setCursor(1,2);
+      //lcd.print("trip8");
+      break;
+    case trip9:
+      lcd.setCursor(0,0);
+      lcd.print("TRIP 9");
+      //lcd.setCursor(1,2);
+      //lcd.print("trip9");
+      break;    
+    case trip10:
+      lcd.setCursor(0,0);
+      lcd.print("TRIP 10");
+      //lcd.setCursor(1,2);
+      //lcd.print("trip10");
       break;
     case fen32:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("NEW");
-      lcd.setCursor(1,2);
-      lcd.print("fen32");
+      lcd.setCursor(0,0);
+      lcd.print("EXPORT");
+      lcd.setCursor(0,1);
+      lcd.print("TO USB");
+      //lcd.setCursor(1,2);
+      //lcd.print("fen32");
       break;
-    case fen3:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("PREVIOUS");
-      lcd.setCursor(1,2);
-      lcd.print("fen3");
+    case fen33:
+      lcd.setCursor(0,0);
+      lcd.print("DISPLAY");
+      lcd.setCursor(0,1);
+      lcd.print(" DATA ");
+      //lcd.setCursor(1,2);
+      //lcd.print("fen33");
+      break;
+    case fen42:
+      lcd.setCursor(0,0);
+      lcd.print("EXPORT");
+      lcd.setCursor(0,1);
+      lcd.print("IN PROG");
+      //lcd.setCursor(1,2);
+      //lcd.print("fen42");
       break;
     case fen43:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("PREVIOUS");
-      lcd.setCursor(1,2);
-      lcd.print("fen43");
+      lcd.setCursor(0,0);
+      lcd.print("SPEEDAVG");
+      lcd.setCursor(0,1);
+      lcd.print("SAVAVIT");
+      //lcd.setCursor(1,2);
+      //lcd.print("fen43");
       break;
     case fen44:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("PREVIOUS");
-      lcd.setCursor(1,2);
-      lcd.print("fen44");
+      lcd.setCursor(0,0);
+      lcd.print("LENGTH");
+      lcd.setCursor(0,1);
+      lcd.print("CMB");
+      //lcd.setCursor(1,2);
+      //lcd.print("fen44");
       break;
     case fen45:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("PREVIOUS");
-      lcd.setCursor(1,2);
-      lcd.print("fen45");
+      lcd.setCursor(0,0);
+      lcd.print("DURATION");
+      lcd.setCursor(0,1);
+      lcd.print("4EVER");
+      //lcd.setCursor(1,2);
+      //lcd.print("fen45");
+      break;
+    case fen34:
+      lcd.setCursor(0,0);
+      lcd.print("  NEW  ");
+      lcd.setCursor(0,1);
+      lcd.print(" ROUTE ");
+      //lcd.setCursor(1,2);
+      //lcd.print("fen34");
       break;
     case fen46:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("PREVIOUS");
-      lcd.setCursor(1,2);
-      lcd.print("fen46");
+      lcd.setCursor(0,0);
+      lcd.print("BEGIN ?");
+      //lcd.setCursor(1,2);
+      //lcd.print("fen46");
       break;
-    case fen47:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("PREVIOUS");
-      lcd.setCursor(1,2);
-      lcd.print("fen47");
-      break;
-    case fen48:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("PREVIOUS");
-      lcd.setCursor(1,2);
-      lcd.print("fen48");
-      break;
-    case fen49:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("PREVIOUS");
-      lcd.setCursor(1,2);
-      lcd.print("fen49");
-      break;
-    case fen50:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("PREVIOUS");
-      lcd.setCursor(1,2);
-      lcd.print("fen50");
-      break;
-    case fen51:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("PREVIOUS");
-      lcd.setCursor(1,2);
-      lcd.print("fen51");
-      break;
-    case fen52:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("PREVIOUS");
-      lcd.setCursor(1,2);
-      lcd.print("fen52");
-      break;
-    case fen63:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("PREVIOUS");
-      lcd.setCursor(1,2);
-      lcd.print("fen63");
-      break;
-    case fen64:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("PREVIOUS");
-      lcd.setCursor(1,2);
-      lcd.print("fen64");
-      break;
-    case fen73:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("PREVIOUS");
-      lcd.setCursor(1,2);
-      lcd.print("fen73");
-      break;
-    case fen74:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("PREVIOUS");
-      lcd.setCursor(1,2);
-      lcd.print("fen74");
-      break;
-    case fen75:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("PREVIOUS");
-      lcd.setCursor(1,2);
-      lcd.print("fen75");
-      break;
-    case fen76:
-      //lcd.clear();
-      //lcd.setCursor(0,0);
-      //lcd.print("PREVIOUS");
-      lcd.setCursor(1,2);
-      lcd.print("fen76");
+    case fen56:
+      lcd.setCursor(0,0);
+      lcd.print("FETCHING");
+      lcd.setCursor(0,1);
+      lcd.print(" DATA ");
+      //lcd.setCursor(1,2);
+      //lcd.print("fen56");
       break;
     default:
-      //lcd.clear();
       lcd.setCursor(1,2);
-      lcd.print("DEF");
+      lcd.print("REBOOT");
       break;
   }
 }
