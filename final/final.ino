@@ -215,8 +215,6 @@ void loop() {
       lcd.println("DISPLAY ");
       lcd.setCursor(0,1);
       lcd.print("COORD");
-      //setCursor(1,2);
-      //lcd.print("fen1");
       break;
     case fen11:
       lcd.setCursor(0,0);
@@ -225,98 +223,68 @@ void loop() {
       lcd.setCursor(0,1);
       // Y coordinates
       lcd.print(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6);
-      //setCursor(1,2);
-      //lcd.print("fen11");
       break;
     case fen12:
       lcd.setCursor(0,0);
       lcd.print("Z");
       lcd.setCursor(0,1);
       lcd.print(falt);
-      //setCursor(1,2);
-      //lcd.print("fen12");
       break;
     case fen2:
       lcd.setCursor(0,0);
       lcd.print("RECORDS");
-      //setCursor(1,2);
-      //lcd.print("fen2");
       break;
     case trip1:
       lcd.setCursor(0,0);
       lcd.print("TRIP 1");
-      //setCursor(1,2);
-      //lcd.print("trip1");
       break;
     case trip2:
       lcd.setCursor(0,0);
       lcd.print("TRIP 2");
-      //lcd.setCursor(1,2);
-      //lcd.print("trip2");
       break;
     case trip3:
       lcd.setCursor(0,0);
       lcd.print("TRIP 3");
-      //lcd.setCursor(1,2);
-      //lcd.print("trip3");
       break;
     case trip4:
       lcd.setCursor(0,0);
       lcd.print("TRIP 4");
-      //lcd.setCursor(1,2);
-      //lcd.print("trip4");
       break;
     case trip5:
       lcd.setCursor(0,0);
       lcd.print("TRIP 5");
-      //lcd.setCursor(1,2);
-      //lcd.print("trip5");
       break;
     case trip6:
       lcd.setCursor(0,0);
       lcd.print("TRIP 6");
-      //lcd.setCursor(1,2);
-      //lcd.print("trip6");
       break;      
     case trip7:
       lcd.setCursor(0,0);
       lcd.print("TRIP 7");
-      //lcd.setCursor(1,2);
-      //lcd.print("trip7");
       break;
     case trip8:
       lcd.setCursor(0,0);
       lcd.print("TRIP 8");
-      //lcd.setCursor(1,2);
-      //lcd.print("trip8");
       break;
     case trip9:
       lcd.setCursor(0,0);
       lcd.print("TRIP 9");
-      //lcd.setCursor(1,2);
-      //lcd.print("trip9");
       break;    
     case trip10:
       lcd.setCursor(0,0);
       lcd.print("TRIP 10");
-      //lcd.setCursor(1,2);
-      //lcd.print("trip10");
       break;
     case fen32:
       lcd.setCursor(0,0);
       lcd.print("EXPORT");
       lcd.setCursor(0,1);
       lcd.print("TO USB");
-      //lcd.setCursor(1,2);
-      //lcd.print("fen32");
       break;
     case fen33:
       lcd.setCursor(0,0);
       lcd.print("DISPLAY");
       lcd.setCursor(0,1);
       lcd.print(" DATA ");
-      //lcd.setCursor(1,2);
-      //lcd.print("fen33");
       break;
     case fen42:
       lcd.setCursor(0,0);
@@ -328,56 +296,41 @@ void loop() {
       ptr_journey->print_coords();
       // When finished
       lcd.setCursor(0,1);
-      lcd.print(" DONE ");
       menu = fen32;
-      //lcd.setCursor(1,2);
-      //lcd.print("fen42");
       break;
     case fen43:
       lcd.setCursor(0,0);
       lcd.print("SPEEDAVG");
       lcd.setCursor(0,1);
       lcd.print(ptr_journey->get_m_speed());
-      //lcd.setCursor(1,2);
-      //lcd.print("fen43");
       break;
     case fen44:
       lcd.setCursor(0,0);
       lcd.print("LENGTH");
       lcd.setCursor(0,1);
-      lcd.println(ptr_journey->get_total_distance()/1000);
-      //lcd.setCursor(1,2);
-      //lcd.print("fen44");
+      lcd.println(ptr_journey->get_total_distance()/1000.0);
       break;
     case fen45:
       lcd.setCursor(0,0);
       lcd.print("DURATION");
       lcd.setCursor(0,1);
-      lcd.println(ptr_journey->get_time()/1000);
-      //lcd.setCursor(1,2);
-      //lcd.print("fen45");
+      lcd.println(ptr_journey->get_time()/1000.0);
       break;
     case fen34:
       lcd.setCursor(0,0);
       lcd.print("  NEW  ");
       lcd.setCursor(0,1);
       lcd.print(" ROUTE ");
-      //lcd.setCursor(1,2);
-      //lcd.print("fen34");
       break;
     case fen46:
       lcd.setCursor(0,0);
       lcd.print("BEGIN ?");
-      //lcd.setCursor(1,2);
-      //lcd.print("fen46");
       break;
     case fen56:
       lcd.setCursor(0,0);
       lcd.print("FETCHING");
       lcd.setCursor(0,1);
       lcd.print(" DATA ");
-      //lcd.setCursor(1,2);
-      //lcd.print("fen56");
       break;
     default:
       lcd.setCursor(1,2);
