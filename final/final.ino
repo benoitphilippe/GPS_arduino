@@ -6,6 +6,7 @@
 #include "GPS.h"
 #include "journey.h"
 #include "Bounce2.h"
+#include "menu.h"
 
 // MAX_BATTERY
 #define MAX_BATTERY 774.0f
@@ -41,10 +42,7 @@ Journey* ptr_journey;
 
 // Input and menu variables
 int input = 0;
-enum fenetres {
-  trip1, trip2, trip3, trip4, trip5, trip6, trip7, trip8, trip9, trip10, fen1, fen2, fen11, fen12, fen13, fen14, fen32, fen33, fen34, fen42, fen43, fen44, fen45, fen46, fen56
-  };
-fenetres menu = fen1;
+Fenetres menu = fen1;
 //Keep track of trip chosen by user
 int currentTrip;
 
@@ -86,256 +84,19 @@ void setup() {
   flat = 0.0f; flon = 0.0f; // position initialisation
 
   // Journey test
-  //ptr_journey = new Journey(4); // create or continue a journey with ID 0 (up to MAX_JOURNEY_IN_MEMORY IDs from journey.h)
-  /* if needed, next two lines reset the journey */
-  //ptr_journey->erase_from_memory(); // delete datas (EEPROM and SD) from this journey (ID 0), and reset distance and time
-  //ptr_journey->save_on_EEPROM(); // save reseted values on EEPROM
   Journey::print_all_EEPROM(); // print EEPROM status (of all journey)
-  //ptr_journey->print_coords(); // print coords saved in SD for this journey (must be stop_recording() mode)
-  //ptr_journey->start_recording(); // allow update_datas() and append_point()
 
 }
 
 void loop() {
-  static int count = 0;
 
   // Input & UI
   input = clavier();
   
-  //////////////////
-  // MENU DEBUG
-  //lcd.setCursor(1,0);
-  //lcd.print(((int)menu));
-  //lcd.setCursor(0,1);
-  //lcd.print(((int)current_enable));
-  //lcd.setCursor(7,1);
-  //////////////////
-  
   if (input != 0) {
-    lcd.clear();
-      
-      switch(input)
-    {
-      // Button 1 is "cancel" or "return"
-      case 1:
-        if (menu==fen11|menu==fen12) {
-          menu=fen1;
-        }
-        else if (menu==trip1|menu==trip2|menu==trip3|menu==trip4|menu==trip5|menu==trip6|menu==trip7|menu==trip8|menu==trip9|menu==trip10) {
-          menu=fen2;
-        }
-        // Return to memory slot selection
-        else if (menu==fen32|menu==fen33|menu==fen34) {
-          // Erasing previous pointer
-          delete ptr_journey;
-          menu=currentTrip;
-          //menu=trip1;
-        }
-        else if (menu==fen42) {
-          menu=fen32;
-        }
-        else if (menu==fen43|menu==fen44|menu==fen45) {
-          menu=fen33;
-        }
-        else if (menu==fen46) {
-          menu=fen34;
-        }
-        // Stop recording
-        else if (menu==fen56) {
-          ptr_journey->stop_recording();
-          ptr_journey->save_on_EEPROM();
-          menu=fen46;
-        }
-        break;
-      
-      // Button 2 is "up"
-      case 2:
-        // Preventing from jumping menus
-        if (menu!=fen1&menu!=fen11&menu!=trip1&menu!=fen32&menu!=fen42&menu!=fen43&menu!=fen46&menu!=fen56) {
-          menu=int(menu)-1;
-        }
-        //
-        break;
-
-      // Button 3 is "down"
-      case 3:
-        // Preventing from jumping menus
-        if (menu!=fen2&menu!=fen12&menu!=trip10&menu!=fen34&menu!=fen42&menu!=fen45&menu!=fen46&menu!=fen56) {
-          menu=int(menu)+1;
-        }
-        break;
-
-      // Button 4 is "enter"
-      case 4:
-        // Preventing from jumping menus
-        if (menu==fen11|menu==fen12|menu==fen42|menu==fen43|menu==fen44|menu==fen45|menu==fen56) {
-          break;
-        }
-        // Enters "current coordinates" menu
-        if (menu==fen1) {
-          menu=fen11;
-        }
-        // Enters "memory slots" menu
-        else if (menu==fen2) {
-          menu=trip1;
-        }
-        // List of memory slots
-        else if (menu==trip1|menu==trip2|menu==trip3|menu==trip4|menu==trip5|menu==trip6|menu==trip7|menu==trip8|menu==trip9|menu==trip10) {
-          // Saving memory slot chosen by user
-          currentTrip=menu;
-          // Create a journey with currentTrip ID
-          ptr_journey = new Journey(currentTrip);
-          menu=fen32;
-        }
-        // Export to USB
-        else if (menu==fen32) {
-          menu=fen42;
-        }
-        // Display chosen trip datas'
-        else if (menu==fen33) {
-          menu=fen43;
-        }
-        // New trip confirmation
-        else if (menu==fen34) {
-          menu=fen46;
-        }
-        // Acquisition validation
-        else if (menu==fen46) {
-          ptr_journey->start_recording();
-          menu=fen56;
-        }
-        break;
-      }
-    }
-
-    switch(menu)
-  {
-    case fen1:
-      lcd.setCursor(0,0);
-      lcd.println("DISPLAY ");
-      lcd.setCursor(0,1);
-      lcd.print("COORD");
-      break;
-    case fen11:
-      lcd.setCursor(0,0);
-      // X coordinates
-      lcd.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6);
-      lcd.setCursor(0,1);
-      // Y coordinates
-      lcd.print(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6);
-      break;
-    case fen12:
-      lcd.setCursor(0,0);
-      lcd.print("Z");
-      lcd.setCursor(0,1);
-      lcd.print(falt);
-      break;
-    case fen2:
-      lcd.setCursor(0,0);
-      lcd.print("RECORDS");
-      break;
-    case trip1:
-      lcd.setCursor(0,0);
-      lcd.print("TRIP 1");
-      break;
-    case trip2:
-      lcd.setCursor(0,0);
-      lcd.print("TRIP 2");
-      break;
-    case trip3:
-      lcd.setCursor(0,0);
-      lcd.print("TRIP 3");
-      break;
-    case trip4:
-      lcd.setCursor(0,0);
-      lcd.print("TRIP 4");
-      break;
-    case trip5:
-      lcd.setCursor(0,0);
-      lcd.print("TRIP 5");
-      break;
-    case trip6:
-      lcd.setCursor(0,0);
-      lcd.print("TRIP 6");
-      break;      
-    case trip7:
-      lcd.setCursor(0,0);
-      lcd.print("TRIP 7");
-      break;
-    case trip8:
-      lcd.setCursor(0,0);
-      lcd.print("TRIP 8");
-      break;
-    case trip9:
-      lcd.setCursor(0,0);
-      lcd.print("TRIP 9");
-      break;    
-    case trip10:
-      lcd.setCursor(0,0);
-      lcd.print("TRIP 10");
-      break;
-    case fen32:
-      lcd.setCursor(0,0);
-      lcd.print("EXPORT");
-      lcd.setCursor(0,1);
-      lcd.print("TO USB");
-      break;
-    case fen33:
-      lcd.setCursor(0,0);
-      lcd.print("DISPLAY");
-      lcd.setCursor(0,1);
-      lcd.print(" DATA ");
-      break;
-    case fen42:
-      lcd.setCursor(0,0);
-      lcd.print("EXPORT");
-      lcd.setCursor(0,1);
-      lcd.print("IN PROG");
-      
-      // Exporting datas
-      ptr_journey->print_coords();
-      // When finished
-      lcd.setCursor(0,1);
-      menu = fen32;
-      break;
-    case fen43:
-      lcd.setCursor(0,0);
-      lcd.print("SPEEDAVG");
-      lcd.setCursor(0,1);
-      lcd.print(ptr_journey->get_m_speed());
-      break;
-    case fen44:
-      lcd.setCursor(0,0);
-      lcd.print("LENGTH");
-      lcd.setCursor(0,1);
-      lcd.println(ptr_journey->get_total_distance()/1000.0);
-      break;
-    case fen45:
-      lcd.setCursor(0,0);
-      lcd.print("DURATION");
-      lcd.setCursor(0,1);
-      lcd.println(ptr_journey->get_time()/1000.0);
-      break;
-    case fen34:
-      lcd.setCursor(0,0);
-      lcd.print("  NEW  ");
-      lcd.setCursor(0,1);
-      lcd.print(" ROUTE ");
-      break;
-    case fen46:
-      lcd.setCursor(0,0);
-      lcd.print("BEGIN ?");
-      break;
-    case fen56:
-      lcd.setCursor(0,0);
-      lcd.print("FETCHING");
-      lcd.setCursor(0,1);
-      lcd.print(" DATA ");
-      break;
-    default:
-      lcd.setCursor(1,2);
-      lcd.print("REBOOT");
-      break;
+    lcd.clear();// clear lcd Screen
+    update_menu(); // update menu
+    do_action(); // do action from user input
   } 
 
   // GPS data fetching
