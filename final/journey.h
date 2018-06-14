@@ -11,6 +11,7 @@
 
 //extern value
 extern float flat, flon;
+extern float falt;
 extern float l_distance;
 extern unsigned long age;
 extern unsigned long time, date;

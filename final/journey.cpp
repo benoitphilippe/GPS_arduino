@@ -126,11 +126,11 @@ unsigned long Journey::get_start_date() // return the start date of journey
             if(aChar == SEPARATOR){ // count separator
                 nb_separator++;
             }
-            else if(nb_separator == 2){ // data we want
+            else if(nb_separator == 3){ // data we want
                 data_content[index++] = aChar; // fill data content
                 data_content[index] = '\0';
             }
-            else if (nb_separator > 2){
+            else if (nb_separator > 3){
                 if(strlen(data_content) > 0)
                 {
                     unsigned long date = atol(data_content);
@@ -170,7 +170,7 @@ unsigned long Journey::get_start_time() // return the start time of journey
             if(aChar == SEPARATOR){ // count separator
                 nb_separator++;
             }
-            else if(nb_separator == 3){ // data we want
+            else if(nb_separator == 4){ // data we want
                 data_content[index++] = aChar; // fill data content
                 data_content[index] = '\0';
             }
@@ -250,6 +250,8 @@ void Journey::append_point(){ // save the current point on SD : lat, lon, date, 
         file.print(flat, 15);
         file.print(SEPARATOR);
         file.print(flon, 15);
+        file.print(SEPARATOR);
+        file.print(falt, 15);
         file.print(SEPARATOR);
         file.print(date);
         file.print(SEPARATOR);

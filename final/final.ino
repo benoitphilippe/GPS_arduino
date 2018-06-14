@@ -34,6 +34,7 @@ int current_enable;
 // GPS global datas, filled with getGPSData()
 float flat, flon;
 float l_distance; // distance in meters
+float falt; // altitude in metters
 unsigned long age;
 unsigned long time, date;
 Journey* ptr_journey;
@@ -89,7 +90,7 @@ void setup() {
   /* if needed, next two lines reset the journey */
   //ptr_journey->erase_from_memory(); // delete datas (EEPROM and SD) from this journey (ID 0), and reset distance and time
   //ptr_journey->save_on_EEPROM(); // save reseted values on EEPROM
-  //Journey::print_all_EEPROM(); // print EEPROM status (of all journey)
+  Journey::print_all_EEPROM(); // print EEPROM status (of all journey)
   //ptr_journey->print_coords(); // print coords saved in SD for this journey (must be stop_recording() mode)
   //ptr_journey->start_recording(); // allow update_datas() and append_point()
 
@@ -230,6 +231,8 @@ void loop() {
     case fen12:
       lcd.setCursor(0,0);
       lcd.print("Z");
+      lcd.setCursor(0,1);
+      lcd.print(falt);
       //setCursor(1,2);
       //lcd.print("fen12");
       break;
@@ -323,10 +326,10 @@ void loop() {
       
       // Exporting datas
       ptr_journey->print_coords();
-
       // When finished
       lcd.setCursor(0,1);
       lcd.print(" DONE ");
+      menu = fen32;
       //lcd.setCursor(1,2);
       //lcd.print("fen42");
       break;
@@ -334,7 +337,7 @@ void loop() {
       lcd.setCursor(0,0);
       lcd.print("SPEEDAVG");
       lcd.setCursor(0,1);
-      lcd.print(3600*(ptr_journey->get_total_distance()/ptr_journey->get_time()));
+      lcd.print(ptr_journey->get_m_speed());
       //lcd.setCursor(1,2);
       //lcd.print("fen43");
       break;

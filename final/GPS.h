@@ -23,6 +23,7 @@
 */
 extern SoftwareSerial ss;
 extern float flat, flon;
+extern float falt;
 extern unsigned long age;
 extern unsigned long time, date;
 extern TinyGPS gps;
