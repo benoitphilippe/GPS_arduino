@@ -5,17 +5,22 @@
 #include "TinyGPS.h"
 
 int clavier() {
+  // Update the output from debouncers
   debouncer1.update();
   debouncer2.update();
   debouncer3.update();
   
+  // Read debouncers value
   int bit0 = debouncer1.read();
   int bit1 = debouncer2.read();
   int enable = debouncer3.read();
 
+  // Compute input value based on the buttons' multiplex
   int input = enable*100+bit1*10+bit0;
   if (enable != current_enable) {
+	// Prevents multiple output at the same time by checking if the button is still in the same state as before
     current_enable = enable;
+    // Return value based on the button pushed
     switch (input) {
       case 100:
         return 1;
@@ -86,7 +91,6 @@ void update_menu(){
         {
             menu = int(menu) - 1;
         }
-        //
         break;
 
     // Button 3 is "down"
@@ -160,16 +164,17 @@ void do_action(){
         break;
     case fen11:
         lcd.setCursor(0, 0);
-        // X coordinates
+        // Latitude coordinates
         lcd.print(flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6);
         lcd.setCursor(0, 1);
-        // Y coordinates
+        // Longitudes coordinates
         lcd.print(flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6);
         break;
     case fen12:
         lcd.setCursor(0, 0);
-        lcd.print("Z");
+        lcd.print("*H");
         lcd.setCursor(0, 1);
+        // Height
         lcd.print(falt);
         break;
     case fen2:
