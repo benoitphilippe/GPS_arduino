@@ -56,6 +56,6 @@ if __name__ == "__main__":
     if len(sys.argv) == 3:
         follow_road(sys.argv[1], sys.argv[2])
     elif len(sys.argv) == 4:
-        follow_road(sys.argv[1], sys.argv[2],step=sys.argv[3])
+        follow_road(sys.argv[1], sys.argv[2],step=int(sys.argv[3]))
     else:
         print("wrong number of argument !")
