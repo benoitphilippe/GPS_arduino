@@ -85,7 +85,7 @@ void setup() {
 
   // Journey test
   Journey::print_all_EEPROM(); // print EEPROM status (of all journey)
-
+  
 }
 
 void loop() {
